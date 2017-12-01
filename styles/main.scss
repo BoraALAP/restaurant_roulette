@@ -106,7 +106,6 @@ h6 {
 		position:absolute;
 		top:0;
 		left:0;
-		background-image:url("https://source.unsplash.com/featured/?cafe");
 		background-size:cover;
 		background-position: center center;
 	}
@@ -134,25 +133,25 @@ h6 {
 			margin: 10px 20px;
 			text-align: center;
 		}
-		&:before{
-			content: ' " ';
-		    position: absolute;
-		    left: 30px;
-		    opacity: 0.4;
-		    font:{
-		    	size:2.5em;
-		    }
-		}	
-		&:after{
-			content: ' " ';
-		    position: absolute;
-		    right: 30px;
-		    opacity: 0.4;
-		    margin-top: -20px;
-		    font:{
-		    	size:2.5em;
-		    }
-		}
+		// &:before{
+		// 	content: ' " ';
+		//     position: absolute;
+		//     left: 30px;
+		//     opacity: 0.4;
+		//     font:{
+		//     	size:2.5em;
+		//     }
+		// }	
+		// &:after{
+		// 	content: ' " ';
+		//     position: absolute;
+		//     right: 30px;
+		//     opacity: 0.4;
+		//     margin-top: -20px;
+		//     font:{
+		//     	size:2.5em;
+		//     }
+		// }
 	}
 	
 	#btn_container{
@@ -244,6 +243,8 @@ h6 {
 .btnwhite{
 	background-color:$white;
 	color:$color1;
+    padding: 0 30px;
+    text-align: center;
 }
 
 

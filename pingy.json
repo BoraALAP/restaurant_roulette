@@ -1,6 +1,6 @@
 {
-	"name": "weatherToPicture",
-	"exportDir": "dist",
+	"name": "restaurant_roulette",
+	"exportDir": "dir",
 	"minify": true,
 	"compile": true,
 	"exclusions": [

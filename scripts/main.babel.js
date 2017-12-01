@@ -1,8 +1,65 @@
 const app = {}
 app.loca = {};
+app.filtered = []
+app.destination = {}
 
+app.place = (selected) => {
 
-app.googleMaps = (loca) => {
+	app.destination = {
+		lat: selected.venue.location.lat,
+		lng: selected.venue.location.lng
+	}
+
+	let priceTier = ''
+
+	if (selected.venue.price.tier == 1){
+		priceTier = '$'
+	} else if (selected.venue.price.tier = 2){
+		priceTier = '$$'
+	} else {
+		priceTier = '$$$'
+	}
+
+	let imgUrl = ''
+
+	if(selected.venue.photos.count == 0){
+		imgUrl = 'assets/img/noimage.jpg'
+	}else{
+		imgUrl = selected.venue.photos.groups[0].url
+	}
+
+	console.log(selected)
+	$('#img_container').css("background-image", `url('${imgUrl}')`);
+
+	$('#place_title').text(selected.venue.name);
+	$('#distance').text(`${selected.venue.location.distance}m`);
+	$('#rating').text(selected.venue.rating);
+	$('#price').text(priceTier);
+	$('#website').text(selected.venue.url);
+	$('#phone').text(selected.venue.contact.phone);
+
+	$('#tip h3').text(selected.tips[0].text);
+
+	console.log(app.loca);
+	console.log(app.destination)
+}
+
+app.pickRandom = (array) => {
+	const randomNum = Math.floor(Math.random() * array.length)
+	if(array.length > 0){
+		app.place(array[randomNum]);
+	} else {
+		swal(`Couldn't find any Nice Place for you`);
+	}
+}
+
+app.filterResult = (data) => {
+	app.filtered = data.filter((data) => {
+		return data.venue.rating > 8.5;
+	})
+}
+
+app.googleMaps = (loca, desti) => {
 	app.googleKey = "AIzaSyB6UumqnkB2X99K9Eeef_RzAQSENqA3I0k";
 
 	let map;
@@ -10,19 +67,16 @@ app.googleMaps = (loca) => {
 	var markerArray = [];
 
 	const origin = new google.maps.LatLng(loca.lat, loca.long);
-	const destination = new google.maps.LatLng(43.6518453,-79.3754017);
+	const destination = new google.maps.LatLng(desti.lat,desti.lng);
 	const map_container = $('#map')[0];
 	const mapInfo = {
 		center: {
 			lat: loca.lat,
 			lng: loca.long
-			},
-			zoom: 12
+		},
+		zoom: 20
 			// styles: options
 		}
-
-
-	console.log(mapInfo);
 
 	// Instantiate a directions service.
 	var directionsService = new google.maps.DirectionsService;
@@ -34,7 +88,7 @@ app.googleMaps = (loca) => {
 	});
 
 	// Create a renderer for directions and bind it to the map.
-    var directionsDisplay = new google.maps.DirectionsRenderer({map: map, suppressMarkers: true});
+    var directionsDisplay = new google.maps.DirectionsRenderer({map: map});
 
     // Instantiate an info window to hold step text.
     var stepDisplay = new google.maps.InfoWindow;
@@ -57,14 +111,14 @@ app.googleMaps = (loca) => {
 		}, function(response, status) {
 			// Route the directions and pass the response to a function to create
 			// markers for each step.
-			// if (status === 'OK') {
-			// 	document.getElementById('warnings-panel').innerHTML =
-			//     '<b>' + response.routes[0].warnings + '</b>';
-			// 	directionsDisplay.setDirections(response);
-			// 	showSteps(response, markerArray, stepDisplay, map);
-			// } else {
-			// 	window.alert('Directions request failed due to ' + status);
-			// }
+			if (status === 'OK') {
+				// document.getElementById('warnings-panel').innerHTML =
+			 //    '<b>' + response.routes[0].warnings + '</b>';
+				directionsDisplay.setDirections(response);
+				showSteps(response, markerArray, stepDisplay, map);
+			} else {
+				window.alert('Directions request failed due to ' + status);
+			}
 		});
 	}
 
@@ -73,12 +127,12 @@ app.googleMaps = (loca) => {
 		// Also attach the marker to an array so we can keep track of it and remove it
 		// when calculating new routes.
 		var myRoute = directionResult.routes[0].legs[0];
-		// for (var i = 0; i < myRoute.steps.length; i++) {
-		// 	var marker = markerArray[i] = markerArray[i] || new google.maps.Marker;
-		// 	marker.setMap(map);
-		// 	marker.setPosition(myRoute.steps[i].start_location);
-		// 	attachInstructionText(stepDisplay, marker, myRoute.steps[i].instructions, map);
-		// }
+		for (var i = 0; i < myRoute.steps.length; i++) {
+			var marker = markerArray[i] = markerArray[i] || new google.maps.Marker;
+			marker.setMap(map);
+			// marker.setPosition(myRoute.steps[i].start_location);
+			// attachInstructionText(stepDisplay, marker, myRoute.steps[i].instructions, map);
+		}
 	}
 
 	function attachInstructionText(stepDisplay, marker, text, map) {
@@ -89,12 +143,6 @@ app.googleMaps = (loca) => {
 			stepDisplay.open(map, marker);
 		});
 	}
-
-	// home.addListener("click", () =>{
-	// map.setZoom(20);
-	// map.setCenter(this.position)
-	// })
-
 }
 
 app.fourSquare = (loca, what) => {
@@ -117,11 +165,11 @@ app.fourSquare = (loca, what) => {
 	}).fail(function(err){
 		console.log(err);
 	}).done(function(data){
-		console.log(loca);
-		console.log(data);
+		app.filterResult(data.response.groups["0"].items);
+	}).then(() =>{
+		app.pickRandom(app.filtered);
 	})
 }
-
 
 app.location = () => {
 	return new Promise((resolve, reject) => {
@@ -135,15 +183,8 @@ app.location = () => {
 	})
 }
 
-
 app.init = () => {
-	app.location().then((resolve) =>{
-		
-		app.googleMaps(app.loca);
-	});
 }
-
-
 
 app.eventFire = () => {
 	const $s3back = $('#section3 > .btnblue');
@@ -158,8 +199,10 @@ app.eventFire = () => {
 	})
 
 	$s2direction.on("click", () => {
+		app.googleMaps(app.loca, app.destination);
 		$('#section3').fadeToggle();
 		$('#section2').fadeToggle();
+
 	})
 
 	$s2change.on("click", () => {
@@ -168,6 +211,7 @@ app.eventFire = () => {
 	})
 
 	$s2another.on("click", () => {
+		app.pickRandom(app.filtered)
 		
 	})
 
@@ -175,15 +219,15 @@ app.eventFire = () => {
 		const $selection = $(this).data('type');
 		console.log($selection);
 
-		app.fourSquare(app.loca, $selection);
+		app.location().then((resolve) =>{
+			app.fourSquare(app.loca, $selection)
+		})
+		
 
 		$('#section2').fadeToggle();
 		$('#section1').fadeToggle();
 	})
 }
-
-
-
 
 $(function() {
 	app.init();
