@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width">
 
     <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="https://unpkg.com/flickity@2/dist/flickity.min.css">
   </head>
   <body>
 
@@ -32,7 +33,12 @@
     <!-- section 2 = get the random reco -->
     <div class="section" id="section2">
       <!-- image -->
-      <div id="img_container"></div>
+      <div id="img_container">
+        <div class="main-carousel">
+          <div class="carousel-cell"><img class="carousel-cell-image"
+      data-flickity-lazyload="https://igx.4sqi.net/img/general//4339713_bCPfMRc-z3cy9t5GuTfTQG8zGSAID79rmknAsaH_6_k.jpg" /></div>
+        </div>
+      </div>
       
       <div id="info_container">
         <!-- name -->
@@ -64,7 +70,7 @@
         <h3></h3>
       </div>
       
-      <div id="btn_container">
+      <div class="btn_container">
         <!-- get direction -->
         <div class="btnblue btn">Directions</div>
         <div class="row">
@@ -83,11 +89,14 @@
       <!-- map view -->
       <div id="map"></div>
       <!-- go back -->
-      <div class="btnblue btn">Go Back</div>
+      <div class="btn_container">
+        <div class="btnblue btn">Go Back</div>
+      </div>
     </div>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.0.6/sweetalert2.all.min.js"></script>
+    <script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>
     <script src="scripts/main.js"></script>
     <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB6UumqnkB2X99K9Eeef_RzAQSENqA3I0k">

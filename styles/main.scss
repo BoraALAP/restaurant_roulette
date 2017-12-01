@@ -25,7 +25,6 @@ $black: #000;
 
 body{
 	overflow:hidden;
-	width:100vw;
 	height:100vh; 
 	font:{
 		family:$font1;
@@ -83,7 +82,7 @@ h6 {
 	background-color:$white;
 	display:flex;
 	flex-direction:column;
-	width:100vw;
+	width:100%;
 
 }
 
@@ -154,9 +153,8 @@ h6 {
 		// }
 	}
 	
-	#btn_container{
-		margin-top:20px;
-
+	.btn_container{
+	    
 		.btnblue{
 			@include linearGradient($color1, $color2);
 			margin-bottom:20px;
@@ -177,9 +175,6 @@ h6 {
 
 #section3{
 	display:none;
-	.btn{
-		margin-top:30px;
-	}
 }
 
 //****************        UI        ****************//
@@ -247,6 +242,12 @@ h6 {
     text-align: center;
 }
 
+.btn_container{
+    position: absolute;
+    bottom: 30px;
+    left:30px;
+    right:30px;
+}
 
 
 //****************        MAP        ****************//

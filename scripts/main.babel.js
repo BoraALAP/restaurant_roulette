@@ -3,6 +3,7 @@ app.loca = {};
 app.filtered = []
 app.destination = {}
 
+
 app.place = (selected) => {
 
 	app.destination = {
@@ -39,15 +40,37 @@ app.place = (selected) => {
 	$('#phone').text(selected.venue.contact.phone);
 
 	$('#tip h3').text(selected.tips[0].text);
+}
 
-	console.log(app.loca);
-	console.log(app.destination)
+app.getImage = (selected) => {
+	$.ajax({
+		url: `https://api.foursquare.com/v2/venues/${selected.venue.id}/photos`,
+  		method: 'GET',
+  		dataType: "json",
+  		data: {
+			client_id: "VH42GH0DFNZLHDRYB4JULCZIPHD3DA4DUCKVPVBMJQIX350R",
+			client_secret: "DLDPDU4LK3ZAGTLHFQLC2JEDGNR01X1MCRRS1NF3VQPV22VL",
+			v: 20171120
+		}
+	}).fail(function(err){
+		console.log(err);
+	}).done(function(data){
+		console.log(data.response.photos.items[0])
+		$('#img_container').css("background-image", `url('${data.response.photos.items[0].prefix}${data.response.photos.items[0].suffix.substr(1)}')`);
+		// for (let i = 0; i < data.response.photos.items.length; i++){
+			// const markUp = `<div class="carousel-cell"><img class="carousel-cell-image"
+		//    data-flickity-lazyload="${data.response.photos.items[0].prefix}${data.response.photos.items[0].suffix.substr(1)}" /></div>`
+      // console.log(markUp)
+			// $('.main-carousel').appendTo(markUp);
+		// }
+	})
 }
 
 app.pickRandom = (array) => {
 	const randomNum = Math.floor(Math.random() * array.length)
 	if(array.length > 0){
 		app.place(array[randomNum]);
+		// app.getImage(array[randomNum]);
 	} else {
 		swal(`Couldn't find any Nice Place for you`);
 	}
@@ -63,7 +86,6 @@ app.googleMaps = (loca, desti) => {
 	app.googleKey = "AIzaSyB6UumqnkB2X99K9Eeef_RzAQSENqA3I0k";
 
 	let map;
-	let home;
 	var markerArray = [];
 
 	const origin = new google.maps.LatLng(loca.lat, loca.long);
@@ -82,10 +104,10 @@ app.googleMaps = (loca, desti) => {
 	var directionsService = new google.maps.DirectionsService;
 
 	map = new google.maps.Map(map_container, mapInfo);
-	home = new google.maps.Marker({
-		position: new google.maps.LatLng(mapInfo.center.lat, mapInfo.center.lng),
-		map:map
-	});
+	// home = new google.maps.Marker({
+	// 	position: new google.maps.LatLng(mapInfo.center.lat, mapInfo.center.lng),
+	// 	map:map
+	// });
 
 	// Create a renderer for directions and bind it to the map.
     var directionsDisplay = new google.maps.DirectionsRenderer({map: map});
@@ -184,10 +206,12 @@ app.location = () => {
 }
 
 app.init = () => {
+	// $('.main-carousel').flickity({  
+	// });
 }
 
 app.eventFire = () => {
-	const $s3back = $('#section3 > .btnblue');
+	const $s3back = $('#section3 .btnblue');
 	const $s2direction = $('#section2 .btnblue');
 	const $s2change = $('#section2 .btnwhite:first-child');
 	const $s2another = $('#section2 .btnwhite:last-child');
