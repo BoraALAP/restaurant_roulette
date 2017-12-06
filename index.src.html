@@ -2,98 +2,20 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title></title>
+    <title>Welcome to the App</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css">
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="https://unpkg.com/flickity@2/dist/flickity.min.css">
   </head>
   <body>
-
-    <!-- 3 sections -->
-
-    <!-- section 1 = select type of food -->
-    <div class="section" id="section1">
-
-      <h1 class="title">Where should I eat?</h1>
-
-      <!-- max 8 -->
-      <div class="foodbtn btn" data-type="salad">Salad</div>
-      <div class="foodbtn btn" data-type="taco">Taco</div>
-      <div class="foodbtn btn" data-type="burger">Burger</div>
-      <div class="foodbtn btn" data-type="steak">Steak</div>
-      <div class="foodbtn btn" data-type="vegan">Vegan</div>
-      <div class="foodbtn btn" data-type="vegetarian">Vegetarian</div>
-      <div class="foodbtn btn" data-type="crepe">Crepe</div>
-      <div class="foodbtn btn" data-type="wings">Wings</div> 
-        
+    <div class="section" id="loginSection">  
+      <div class="btnblue btn" data-log="facebook">Facebook</div>
+      <div class="btnblue btn" data-log="google">Google</div>
+      <div class="btnblue btn" data-log="github">Github</div>
     </div>
-
-    <!-- section 2 = get the random reco -->
-    <div class="section" id="section2">
-      <!-- image -->
-      <div id="img_container">
-        <div class="main-carousel">
-          <div class="carousel-cell"><img class="carousel-cell-image"
-      data-flickity-lazyload="https://igx.4sqi.net/img/general//4339713_bCPfMRc-z3cy9t5GuTfTQG8zGSAID79rmknAsaH_6_k.jpg" /></div>
-        </div>
-      </div>
-      
-      <div id="info_container">
-        <!-- name -->
-        <div class="row">
-          <h1 id="place_title"></h1>
-        <!-- distance -->
-          <h4 id="distance"></h4>
-        </div>
-        <!-- rating -->
-        <div class="row">
-          <h3 id="rating"></h3>
-          <!-- price tier -->
-          <h4 id="price"></h4>
-        </div>
-      </div>
-      <hr>
-      <!-- contact -->
-      <div id="contact_container">
-        <div class="row">
-        <!-- website -->
-          <h2 id="website"></h2>
-          <!-- phone -->
-          <h2 id="phone"></h2>
-        </div>
-      </div>
-      <hr>
-      <div id="tip">
-        <!-- tip -->
-        <h3></h3>
-      </div>
-      
-      <div class="btn_container">
-        <!-- get direction -->
-        <div class="btnblue btn">Directions</div>
-        <div class="row">
-          <div class="btnwhite btn">Change Category</div>
-          <!-- show another suggestion -->
-          <div class="btnwhite btn">Give Another Suggestion</div>
-        </div>
-      </div>
-      
-    </div>
-
-
-    <!-- section 3 = direction to reco -->
-    <div class="section" id="section3">
-
-      <!-- map view -->
-      <div id="map"></div>
-      <!-- go back -->
-      <div class="btn_container">
-        <div class="btnblue btn">Go Back</div>
-      </div>
-    </div>
-    
+    <script src="https://www.gstatic.com/firebasejs/4.7.0/firebase.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.0.6/sweetalert2.all.min.js"></script>
     <script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>

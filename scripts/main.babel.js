@@ -3,9 +3,42 @@ app.loca = {};
 app.filtered = []
 app.destination = {}
 
+app.selectedPlace = {};
+
+
+app.displayLiked = () => {
+	const userData = firebase.database().ref(`users/${app.userId.uid}`);
+
+	const writeup = (img, title, website, phone) => {
+		return `<div class="container">
+				<img src="${img}">
+				<div class="content">
+					<h1 class="place_title">${title}</h2>
+					<hr>
+					<h2 class="website">${website}</h2>
+					<hr>
+					<h2 class="phone">${phone}</h2>
+				</div>
+			</div>
+			<hr class="content_divider">`
+	
+	}
+
+	userData.on('value', function(snapshot) {
+		const data = snapshot.val();
+		var array = $.map(data, function(value, index){
+			return value;
+		}).reverse();
+		console.log(array);
+
+		array.forEach(function(item){
+			$('#liked_content').append(writeup(" ", item.venue.name, item.venue.url, item.venue.contact.phone));
+			
+		})
+	});
+}
 
 app.place = (selected) => {
-
 	app.destination = {
 		lat: selected.venue.location.lat,
 		lng: selected.venue.location.lng
@@ -21,25 +54,20 @@ app.place = (selected) => {
 		priceTier = '$$$'
 	}
 
-	let imgUrl = ''
+	$('#section2 .place_title').text(selected.venue.name);
+	$('#section2 #distance').text(`${selected.venue.location.distance}m`);
+	$('#section2 .rating').text(selected.venue.rating);
+	$('#section2 #price').text(priceTier);
+	$('#section2 #website').text(selected.venue.url);
+	$('#section2 #phone').text(selected.venue.contact.phone);
 
-	if(selected.venue.photos.count == 0){
-		imgUrl = 'assets/img/noimage.jpg'
-	}else{
-		imgUrl = selected.venue.photos.groups[0].url
-	}
+	
 
-	console.log(selected)
-	$('#img_container').css("background-image", `url('${imgUrl}')`);
+	if(selected.tips.length > 0){
+		$('#tip h3').text(selected.tips[0].text);
+	} 	
 
-	$('#place_title').text(selected.venue.name);
-	$('#distance').text(`${selected.venue.location.distance}m`);
-	$('#rating').text(selected.venue.rating);
-	$('#price').text(priceTier);
-	$('#website').text(selected.venue.url);
-	$('#phone').text(selected.venue.contact.phone);
-
-	$('#tip h3').text(selected.tips[0].text);
+	app.mapArray();
 }
 
 app.getImage = (selected) => {
@@ -52,33 +80,61 @@ app.getImage = (selected) => {
 			client_secret: "DLDPDU4LK3ZAGTLHFQLC2JEDGNR01X1MCRRS1NF3VQPV22VL",
 			v: 20171120
 		}
-	}).fail(function(err){
-		console.log(err);
-	}).done(function(data){
-		console.log(data.response.photos.items[0])
-		$('#img_container').css("background-image", `url('${data.response.photos.items[0].prefix}${data.response.photos.items[0].suffix.substr(1)}')`);
-		// for (let i = 0; i < data.response.photos.items.length; i++){
-			// const markUp = `<div class="carousel-cell"><img class="carousel-cell-image"
-		//    data-flickity-lazyload="${data.response.photos.items[0].prefix}${data.response.photos.items[0].suffix.substr(1)}" /></div>`
-      // console.log(markUp)
-			// $('.main-carousel').appendTo(markUp);
-		// }
+	}).then(function(data){
+		const placeimage = `${data.response.photos.items[0].prefix}${data.response.photos.items[0].width}x${data.response.photos.items[0].height}${data.response.photos.items[0].suffix}`;
+		$('#img_container').css("background-image", `url('${placeimage}')`);
 	})
 }
 
 app.pickRandom = (array) => {
-	const randomNum = Math.floor(Math.random() * array.length)
-	if(array.length > 0){
-		app.place(array[randomNum]);
-		// app.getImage(array[randomNum]);
+	let randomNum = Math.floor(Math.random() * app.filtered.length)
+	if(app.filtered.length > 0){
+		app.selectedPlace = app.filtered[randomNum];
 	} else {
 		swal(`Couldn't find any Nice Place for you`);
 	}
+	console.log(app.filtered);
+	console.log(app.filtered[randomNum]);	
 }
 
 app.filterResult = (data) => {
 	app.filtered = data.filter((data) => {
 		return data.venue.rating > 8.5;
+	})
+}
+
+app.mapArray = () => {
+	const index = app.filtered.indexOf(app.selectedPlace);
+	const newArray = app.filtered.splice(index,1);
+}
+
+app.fourSquare = (loca, what) => {
+	app.clientId = "VH42GH0DFNZLHDRYB4JULCZIPHD3DA4DUCKVPVBMJQIX350R";
+	app.clientSecret = "DLDPDU4LK3ZAGTLHFQLC2JEDGNR01X1MCRRS1NF3VQPV22VL";
+	$.ajax({
+		url: 'https://api.foursquare.com/v2/venues/explore',
+  		method: 'GET',
+  		dataType: "json",
+  		data: {
+			client_id: "VH42GH0DFNZLHDRYB4JULCZIPHD3DA4DUCKVPVBMJQIX350R",
+			client_secret: "DLDPDU4LK3ZAGTLHFQLC2JEDGNR01X1MCRRS1NF3VQPV22VL",
+			ll: `${loca.lat},${loca.long}`,
+			// section: "food",
+			radius: 1500,
+			query: `${what}`,
+			// openNow: 1,
+			v: 20171120
+		}
+	}).then(function(data){
+		
+		app.filterResult(data.response.groups["0"].items);
+	}).then(function(){
+		app.pickRandom(app.filtered);
+	}).then(function(){
+		app.place(app.selectedPlace);
+		app.getImage(app.selectedPlace);
+		// app.mapArray();
+		
 	})
 }
 
@@ -167,32 +223,6 @@ app.googleMaps = (loca, desti) => {
 	}
 }
 
-app.fourSquare = (loca, what) => {
-	app.clientId = "VH42GH0DFNZLHDRYB4JULCZIPHD3DA4DUCKVPVBMJQIX350R";
-	app.clientSecret = "DLDPDU4LK3ZAGTLHFQLC2JEDGNR01X1MCRRS1NF3VQPV22VL";
-	$.ajax({
-		url: 'https://api.foursquare.com/v2/venues/explore',
-  		method: 'GET',
-  		dataType: "json",
-  		data: {
-			client_id: "VH42GH0DFNZLHDRYB4JULCZIPHD3DA4DUCKVPVBMJQIX350R",
-			client_secret: "DLDPDU4LK3ZAGTLHFQLC2JEDGNR01X1MCRRS1NF3VQPV22VL",
-			ll: `${loca.lat},${loca.long}`,
-			// section: "food",
-			radius: 1500,
-			query: `${what}`,
-			openNow: 1,
-			v: 20171120
-		}
-	}).fail(function(err){
-		console.log(err);
-	}).done(function(data){
-		app.filterResult(data.response.groups["0"].items);
-	}).then(() =>{
-		app.pickRandom(app.filtered);
-	})
-}
-
 app.location = () => {
 	return new Promise((resolve, reject) => {
 		navigator.geolocation.getCurrentPosition((position) =>{
@@ -205,21 +235,98 @@ app.location = () => {
 	})
 }
 
-app.init = () => {
-	// $('.main-carousel').flickity({  
-	// });
+app.dataBase = () => {
+
+	const config = {
+		apiKey: "AIzaSyCsA8GKOpORb7xuyhUNH7JhDtFWzJ6IYWg",
+	    authDomain: "project3-f7eba.firebaseapp.com",
+	    databaseURL: "https://project3-f7eba.firebaseio.com",
+	    projectId: "project3-f7eba",
+	    storageBucket: "",
+	    messagingSenderId: "925278152263"
+	}
+
+	firebase.initializeApp(config);
+	const database = firebase.database();
+
+	firebase.auth().onAuthStateChanged(function(user) {
+		if (user) {
+		    app.userId = firebase.auth().currentUser;
+		} else {
+		// No user is signed in.
+		}
+	});
+	
 }
+
+app.Log = (type) => {
+	if ( type == "facebook"){
+		var provider = new firebase.auth.FacebookAuthProvider();
+	} else if ( type == "google"){
+		var provider = new firebase.auth.GoogleAuthProvider();
+	} else if ( type == "github"){
+		var provider = new firebase.auth.GithubAuthProvider();
+	}
+
+	firebase.auth().onAuthStateChanged(function(user) {	
+
+		if (!user && window.location.pathname == '/') { 
+			firebase.auth().signInWithPopup(provider).then(function(result) {
+			// This gives you a Google Access Token. You can use it to access the Google API.
+				var token = result.credential.accessToken;
+				// The signed-in user info.
+				app.userId = result.user;
+				console.log("push");
+				// ...
+			}).catch(function(error) {
+				// Handle Errors here.
+				var errorCode = error.code;
+				var errorMessage = error.message;
+				// The email of the user's account used.
+				var email = error.email;
+				// The firebase.auth.AuthCredential type that was used.
+				var credential = error.credential;
+				// ...
+			});
+		} else if ( user && window.location.pathname == '/'){
+			window.location = 'app.html';
+
+		} else if ( !user && window.location.pathname == '/app.html'){
+			window.location = '/';
+		}
+		
+	});
+}
+
 
 app.eventFire = () => {
 	const $s3back = $('#section3 .btnblue');
 	const $s2direction = $('#section2 .btnblue');
 	const $s2change = $('#section2 .btnwhite:first-child');
 	const $s2another = $('#section2 .btnwhite:last-child');
+	const $s2like = $('#like');
 	const $s1food = $('.foodbtn');
+
+	const $shlog = $('#log_in');
+	const $shliked = $('#liked');
+
+	const $segoogle = $('#loginSection > div');
+
+
+	$s2like.on("click", function(){
+		$(this).addClass('animation');
+		firebase.database().ref(`/users/${firebase.auth().currentUser.uid}`).push(app.selectedPlace);
+		setTimeout(function(){
+			$s2like.removeClass('animation');
+		},2000);
+		
+		console.log("saved");
+	})
 
 	$s3back.on("click", () => {
 		$('#section2').fadeToggle();
 		$('#section3').fadeToggle();
+		$('#map').empty();
 	})
 
 	$s2direction.on("click", () => {
@@ -235,24 +342,69 @@ app.eventFire = () => {
 	})
 
 	$s2another.on("click", () => {
-		app.pickRandom(app.filtered)
+		const action = new Promise (function (resolve){
+			$('#section2').fadeOut();
+			// setTimeout(function(){
+				resolve()
+			// },2000);
+		}).then(function(){
+			app.pickRandom(app.filtered);
+			app.place(app.selectedPlace);
+			app.getImage(app.selectedPlace);
+		}).then(function(){
+			$('#section2').fadeIn();
+			console.log("clicked")
+		})
 		
 	})
 
 	$s1food.on("click", function(){
 		const $selection = $(this).data('type');
-		console.log($selection);
 
 		app.location().then((resolve) =>{
 			app.fourSquare(app.loca, $selection)
 		})
-		
-
 		$('#section2').fadeToggle();
 		$('#section1').fadeToggle();
 	})
+
+	$shlog.on("click",function(){
+		console.log("clicked")
+		if (window.location.pathname != '/' ){
+			firebase.auth().signOut().then(function() {
+				window.location = '/';
+				console.log("logedout");
+			}).catch(function(error) {
+			  console.log(error);
+			});
+		}
+	})
+
+	$segoogle.on("click", function(){
+		let selected = $(this).data('log');
+		console.log(selected);
+		app.Log(selected);
+	})
+
+	$shliked.on("click", function(){
+		$('#liked_content').empty();
+		$('#section2').fadeToggle();
+		$('#liked_content').fadeToggle();
+		$('#liked_content').toggleClass('active');
+		app.displayLiked();	
+
+		if($('#liked_content').hasClass('active')){
+			$('#liked img').attr('src', 'assets/svg/close.svg');
+		} else {
+			$('#liked img').attr('src', 'assets/svg/like.svg');
+		}
+
+	})
 }
 
+app.init = () => {
+	app.dataBase();
+}
 $(function() {
 	app.init();
 	app.eventFire();
