@@ -271,7 +271,12 @@ app.Log = (type) => {
 		var provider = new firebase.auth.GithubAuthProvider();
 	}
 
+	console.log({provider});
+
 	firebase.auth().onAuthStateChanged(function(user) {	
+
+	console.log({user});
+	
 
 		if (!user && window.location.pathname == '/') { 
 			firebase.auth().signInWithPopup(provider).then(function(result) {
@@ -280,8 +285,10 @@ app.Log = (type) => {
 				// The signed-in user info.
 				app.userId = result.user;
 				console.log("push");
+				console.log({result});
 				// ...
 			}).catch(function(error) {
+				console.log({error});
 				// Handle Errors here.
 				var errorCode = error.code;
 				var errorMessage = error.message;
