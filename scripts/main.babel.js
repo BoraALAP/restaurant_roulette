@@ -31,10 +31,14 @@ app.displayLiked = () => {
 		}).reverse();
 		console.log(array);
 
-		array.forEach(function(item){
-			$('#liked_content').append(writeup(" ", item.venue.name, item.venue.url, item.venue.contact.phone));
-			
-		})
+		if(array.length == 0){
+			$('#liked_content').append(`<h1>You did't like anything yet</h1>`)
+		} else {
+			array.forEach(function(item){
+				$('#liked_content').append(writeup(" ", item.venue.name, item.venue.url, item.venue.contact.phone));
+				
+			})
+		}
 	});
 }
 
@@ -242,7 +246,7 @@ app.dataBase = () => {
 	    authDomain: "project3-f7eba.firebaseapp.com",
 	    databaseURL: "https://project3-f7eba.firebaseio.com",
 	    projectId: "project3-f7eba",
-	    storageBucket: "",
+	    storageBucket: "project3-f7eba.appspot.com",
 	    messagingSenderId: "925278152263"
 	}
 
@@ -255,8 +259,7 @@ app.dataBase = () => {
 		} else {
 		// No user is signed in.
 		}
-	});
-	
+	});	
 }
 
 app.Log = (type) => {
@@ -298,7 +301,6 @@ app.Log = (type) => {
 	});
 }
 
-
 app.eventFire = () => {
 	const $s3back = $('#section3 .btnblue');
 	const $s2direction = $('#section2 .btnblue');
@@ -309,6 +311,7 @@ app.eventFire = () => {
 
 	const $shlog = $('#log_in');
 	const $shliked = $('#liked');
+	const $shhistory = $('#history');
 
 	const $segoogle = $('#loginSection > div');
 
@@ -394,11 +397,25 @@ app.eventFire = () => {
 		app.displayLiked();	
 
 		if($('#liked_content').hasClass('active')){
-			$('#liked img').attr('src', 'assets/svg/close.svg');
+			$('#liked').empty()
+			$('#liked').append(`<i class="fas fa-times-circle fa-2x"></i>`);
 		} else {
-			$('#liked img').attr('src', 'assets/svg/like.svg');
+			$('#liked').empty()
+			$('#liked').append(`<i class="fas fa-thumbs-up fa-2x"></i>`);
+			
 		}
+	})
 
+	$shhistory.on("click", function(){
+		$('#history_content').toggleClass('active');
+		if($('#history_content').hasClass('active')){
+			$('#history').empty()
+			$('#history').append(`<i class="fas fa-times-circle fa-2x"></i>`);
+		} else {
+			$('#history').empty()
+			$('#history').append(`<i class="fas fa-history fa-2x"></i>`);
+			
+		}
 	})
 }
 
