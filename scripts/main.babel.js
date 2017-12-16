@@ -388,9 +388,9 @@ app.eventFire = () => {
 	})
 
 	$shlog.on("click",function(){
-		if (window.location.pathname != `${app.baseURL}` ){
+		if (window.location.pathname != `/` ){
 			firebase.auth().signOut().then(function() {
-				window.location = `${app.baseURL}`;
+				window.location = `/`;
 			}).catch(function(error) {
 				console.log(error); 
 			});
@@ -400,6 +400,7 @@ app.eventFire = () => {
 	$segoogle.on("click", function(){
 		let selected = $(this).data('log');
 		app.Log(selected);
+		console.log(window.location)
 	})
 
 	$shheader.on("click", function(){
