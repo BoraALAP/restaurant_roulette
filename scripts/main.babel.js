@@ -2,26 +2,21 @@ const app = {}
 app.loca = {};
 app.filtered = []
 app.destination = {}
-
+app.selected = {}
 app.selectedPlace = {};
+app.selectedImage = {};
+app.foodType = {}
 
 
-app.displayLiked = () => {
-	const userData = firebase.database().ref(`users/${app.userId.uid}`);
+app.baseURL = `restaurant_roulette/`;
+let map;
 
-	const writeup = (img, title, website, phone) => {
-		return `<div class="container">
-				<img src="${img}">
-				<div class="content">
-					<h1 class="place_title">${title}</h2>
-					<hr>
-					<h2 class="website">${website}</h2>
-					<hr>
-					<h2 class="phone">${phone}</h2>
-				</div>
-			</div>
-			<hr class="content_divider">`
-	
+app.displayDatabase = (display) => {
+	let userData;
+	if(display == 'liked'){
+		userData = firebase.database().ref(`users/${app.userId.uid}/${display}`);	
+	} else {
+		userData = firebase.database().ref(`users/${app.userId.uid}/${display}`).limitToLast(10);
 	}
 
 	userData.on('value', function(snapshot) {
@@ -29,54 +24,68 @@ app.displayLiked = () => {
 		var array = $.map(data, function(value, index){
 			return value;
 		}).reverse();
-		console.log(array);
 
 		if(array.length == 0){
-			$('#liked_content').append(`<h1>You did't like anything yet</h1>`)
+			$(`#${display}_content`).append(`<h2>You did't like anything yet</h2>`)
 		} else {
+			if(display == 'liked'){
+				$(`#${display}_content`).append(`<h1>You Liked</h1>`)
+			} else {
+				$(`#${display}_content`).append(`<h1>You Looked At</h1>`)
+			}
+			
 			array.forEach(function(item){
-				$('#liked_content').append(writeup(" ", item.venue.name, item.venue.url, item.venue.contact.phone));
-				
+				$(`#${display}_content`).append(app.writeup(item.photo, item.name, item.url, item.phone));
 			})
 		}
 	});
 }
 
+app.writeup = (img, title, website, phone) => {
+	return `<div class="container">
+			<img src="${img}">
+			<div class="content">
+				<h3 class="place_title">${title}</h3>
+				
+				<h4 class="website"><a href="${website}">${website}</a></h4>
+		
+				<h4 class="phone"><a href="tel:${phone}">${phone}</a></h4>
+			</div>
+		</div>
+		<div class="divider content_divider"></div>`
+}
+
 app.place = (selected) => {
 	app.destination = {
-		lat: selected.venue.location.lat,
-		lng: selected.venue.location.lng
+		lat: selected.lat,
+		lng: selected.lng
 	}
-
 	let priceTier = ''
 
-	if (selected.venue.price.tier == 1){
+	if (selected.price == 1){
 		priceTier = '$'
-	} else if (selected.venue.price.tier = 2){
+	} else if (selected.price = 2){
 		priceTier = '$$'
 	} else {
 		priceTier = '$$$'
 	}
 
-	$('#section2 .place_title').text(selected.venue.name);
-	$('#section2 #distance').text(`${selected.venue.location.distance}m`);
-	$('#section2 .rating').text(selected.venue.rating);
+	$('#section2 .place_title').text(selected.name);
+	$('#section2 #distance').text(`${selected.distance}m`);
+	$('#section2 .rating').text(selected.rating);
 	$('#section2 #price').text(priceTier);
-	$('#section2 #website').text(selected.venue.url);
-	$('#section2 #phone').text(selected.venue.contact.phone);
-
+	$('#section2 #website').html(`<a href="${selected.url}">${selected.url}</a>`);
+	$('#section2 #phone').html(`<a href="tel:${selected.phone}">${selected.phone}</a>`);
+	$('#tip h3').text(selected.tips);
+	$('#img_container').css("background-image", `url('${selected.photo}')`);
 	
-
-	if(selected.tips.length > 0){
-		$('#tip h3').text(selected.tips[0].text);
-	} 	
-
-	app.mapArray();
+	app.mapArray(app.selected);
+	firebase.database().ref(`/users/${firebase.auth().currentUser.uid}/history`).push(app.selectedPlace);
 }
 
 app.getImage = (selected) => {
 	$.ajax({
-		url: `https://api.foursquare.com/v2/venues/${selected.venue.id}/photos`,
+		url: `https://api.foursquare.com/v2/venues/${selected.id}/photos`,
   		method: 'GET',
   		dataType: "json",
   		data: {
@@ -85,20 +94,33 @@ app.getImage = (selected) => {
 			v: 20171120
 		}
 	}).then(function(data){
-		const placeimage = `${data.response.photos.items[0].prefix}${data.response.photos.items[0].width}x${data.response.photos.items[0].height}${data.response.photos.items[0].suffix}`;
-		$('#img_container').css("background-image", `url('${placeimage}')`);
+		app.selectedImage = `${data.response.photos.items[0].prefix}${data.response.photos.items[0].width}x${data.response.photos.items[0].height}${data.response.photos.items[0].suffix}`;
+	}).then(function(){
+		app.selectedPlace = {
+			id: app.selected.venue.id,
+			name: app.selected.venue.name,
+			distance: app.selected.venue.location.distance,
+			rating: app.selected.venue.rating,
+			price: app.selected.venue.price.tier,
+			url: app.selected.venue.url,
+			phone: app.selected.venue.contact.phone,
+			photo: app.selectedImage,
+			lat: app.selected.venue.location.lat,
+			lng: app.selected.venue.location.lng,
+			tips: app.selected.tips[0].text
+		}
+		app.place(app.selectedPlace);
 	})
 }
 
 app.pickRandom = (array) => {
 	let randomNum = Math.floor(Math.random() * app.filtered.length)
 	if(app.filtered.length > 0){
-		app.selectedPlace = app.filtered[randomNum];
+		app.selected = app.filtered[randomNum];
+		app.getImage(app.selected.venue);
 	} else {
-		swal(`Couldn't find any Nice Place for you`);
+		TweenMax.to($('.warning'),1,{opacity: "1", display : "block"});
 	}
-	console.log(app.filtered);
-	console.log(app.filtered[randomNum]);	
 }
 
 app.filterResult = (data) => {
@@ -107,8 +129,9 @@ app.filterResult = (data) => {
 	})
 }
 
-app.mapArray = () => {
-	const index = app.filtered.indexOf(app.selectedPlace);
+app.mapArray = (ndelete) => {
+	console.log(ndelete);
+	const index = app.filtered.indexOf(ndelete);
 	const newArray = app.filtered.splice(index,1);
 }
 
@@ -124,28 +147,23 @@ app.fourSquare = (loca, what) => {
 			client_secret: "DLDPDU4LK3ZAGTLHFQLC2JEDGNR01X1MCRRS1NF3VQPV22VL",
 			ll: `${loca.lat},${loca.long}`,
 			// section: "food",
-			radius: 1500,
+			radius: 2500,
 			query: `${what}`,
-			// openNow: 1,
+			openNow: 1,
 			v: 20171120
 		}
 	}).then(function(data){
-		
 		app.filterResult(data.response.groups["0"].items);
 	}).then(function(){
 		app.pickRandom(app.filtered);
-	}).then(function(){
-		app.place(app.selectedPlace);
-		app.getImage(app.selectedPlace);
-		// app.mapArray();
-		
+		$('#section2').fadeToggle();
+		$('#section1').fadeToggle();
+		TweenMax.to($('#section2'), 1, {opacity:1, ease:Back.easeOut}).delay(1);
 	})
 }
 
 app.googleMaps = (loca, desti) => {
 	app.googleKey = "AIzaSyB6UumqnkB2X99K9Eeef_RzAQSENqA3I0k";
-
-	let map;
 	var markerArray = [];
 
 	const origin = new google.maps.LatLng(loca.lat, loca.long);
@@ -271,20 +289,16 @@ app.Log = (type) => {
 		var provider = new firebase.auth.GithubAuthProvider();
 	}
 
-	
-
 	firebase.auth().onAuthStateChanged(function(user) {	
 		if (!user) { 
-			console.log("test");
 			firebase.auth().signInWithPopup(provider).then(function(result) {
 			// This gives you a Google Access Token. You can use it to access the Google API.
 				var token = result.credential.accessToken;
 				// The signed-in user info.
 				app.userId = result.user;
-			
 				// ...
 			}).catch(function(error) {
-				
+				console.log(error);
 				// Handle Errors here.
 				var errorCode = error.code;
 				var errorMessage = error.message;
@@ -294,52 +308,49 @@ app.Log = (type) => {
 				var credential = error.credential;
 				// ...
 			});
-		} else if ( user && window.location.pathname == '/'){
-			window.location = 'app.html';
+		} else if ( user && window.location.pathname == `${app.baseURL}`){
+			window.location = `${app.baseURL}app.html`;
 
-		} else if ( !user && window.location.pathname == '/app.html'){
-			window.location = '/';
-		}
-		
+		} else if ( !user && window.location.pathname == `${app.baseURL}app.html`){
+			window.location = `${app.baseURL}`;
+		}	
 	});
 }
 
 app.eventFire = () => {
 	const $s3back = $('#section3 .btnblue');
-	const $s2direction = $('#section2 .btnblue');
+	const $s2direction = $('#direction');
 	const $s2change = $('#section2 .btnwhite:first-child');
 	const $s2another = $('#section2 .btnwhite:last-child');
 	const $s2like = $('#like');
 	const $s1food = $('.foodbtn');
 
 	const $shlog = $('#log_in');
-	const $shliked = $('#liked');
-	const $shhistory = $('#history');
+	const $shheader = $('#header div');
 
 	const $segoogle = $('#loginSection > div');
 
-
 	$s2like.on("click", function(){
 		$(this).addClass('animation');
-		firebase.database().ref(`/users/${firebase.auth().currentUser.uid}`).push(app.selectedPlace);
+		firebase.database().ref(`/users/${firebase.auth().currentUser.uid}/liked`).push(app.selectedPlace);
 		setTimeout(function(){
 			$s2like.removeClass('animation');
 		},2000);
-		
-		console.log("saved");
 	})
 
 	$s3back.on("click", () => {
 		$('#section2').fadeToggle();
 		$('#section3').fadeToggle();
-		$('#map').empty();
+		$('#map').remove();
+		map = null;
+		
 	})
 
 	$s2direction.on("click", () => {
+		$('#section3').prepend(`<div id="map"></div>`);
 		app.googleMaps(app.loca, app.destination);
 		$('#section3').fadeToggle();
 		$('#section2').fadeToggle();
-
 	})
 
 	$s2change.on("click", () => {
@@ -350,81 +361,93 @@ app.eventFire = () => {
 	$s2another.on("click", () => {
 		const action = new Promise (function (resolve){
 			$('#section2').fadeOut();
+
 			// setTimeout(function(){
 				resolve()
 			// },2000);
 		}).then(function(){
 			app.pickRandom(app.filtered);
-			app.place(app.selectedPlace);
-			app.getImage(app.selectedPlace);
+			// app.place(app.selectedPlace);
 		}).then(function(){
+			$('#section2').css('opacity',0);
 			$('#section2').fadeIn();
-			console.log("clicked")
-		})
-		
+			// TweenMax.to($('#section2'), 1, {opacity:1, ease:Back.easeOut}).delay(5);
+		})	
 	})
 
 	$s1food.on("click", function(){
-		const $selection = $(this).data('type');
-
-		app.location().then((resolve) =>{
-			app.fourSquare(app.loca, $selection)
-		})
-		$('#section2').fadeToggle();
-		$('#section1').fadeToggle();
+		app.foodType = $(this).data('type');
+		TweenMax.to($('.preloader'),1,{display : "flex",opacity: "1"});
+		app.location().then(() => {
+			
+		}).then((resolve) =>{
+			app.fourSquare(app.loca, app.foodType)
+			TweenMax.to($('.preloader'),1,{opacity: "0", display : "none"});
+			
+		})	
 	})
 
 	$shlog.on("click",function(){
-		console.log("clicked")
-		if (window.location.pathname != '/' ){
+		if (window.location.pathname != `${app.baseURL}` ){
 			firebase.auth().signOut().then(function() {
-				window.location = '/';
-				console.log("logedout");
+				window.location = `${app.baseURL}`;
 			}).catch(function(error) {
-			  console.log(error);
+				console.log(error); 
 			});
 		}
 	})
 
 	$segoogle.on("click", function(){
 		let selected = $(this).data('log');
-		console.log(selected);
 		app.Log(selected);
 	})
 
-	$shliked.on("click", function(){
-		$('#liked_content').empty();
-		$('#section2').fadeToggle();
-		$('#liked_content').fadeToggle();
-		$('#liked_content').toggleClass('active');
-		app.displayLiked();	
-
-		if($('#liked_content').hasClass('active')){
-			$('#liked').empty()
-			$('#liked').append(`<i class="fas fa-times-circle fa-2x"></i>`);
+	$shheader.on("click", function(){
+		if ($(this).hasClass("active")){
+			$shheader.removeClass('active');
+			$(this).empty();
+			if ($(this).is('#liked')){
+				$('#liked').append(`<i class="fas fa-thumbs-up"></i>`);
+			} else if ($(this).is('#history')){
+				$('#history').append(`<i class="fas fa-history"></i>`);
+			}
+			$('#external_info').removeClass('active');
+			TweenMax.to($('#external_info'),1,{opacity: "0", display : "none"});
 		} else {
-			$('#liked').empty()
-			$('#liked').append(`<i class="fas fa-thumbs-up fa-2x"></i>`);
-			
+			$shheader.removeClass('active');
+			$('#external_info').removeClass('active');
+			TweenMax.to($('#external_info'),1,{opacity: "0", display : "none"});
+			$('#liked_content').empty();
+			$('#history_content').empty();
+			$(this).addClass("active");
+			$(this).empty();
+			$(this).append(`<i class="fas fa-times-circle"></i>`);
+			if ($(this).is('#liked')){
+				$('#external_info').addClass('active');
+				TweenMax.to($('#external_info'),1,{display : "block",opacity: "1"});
+				$('#history').empty();
+				$('#history').append(`<i class="fas fa-history"></i>`);
+				app.displayDatabase('liked');
+			} else if ($(this).is('#history')){
+				$('#external_info').addClass('active');
+				TweenMax.to($('#external_info'),1,{display : "block",opacity: "1"});
+				$('#liked').empty();
+				$('#liked').append(`<i class="fas fa-thumbs-up"></i>`);
+				app.displayDatabase('history');	
+			}
 		}
 	})
 
-	$shhistory.on("click", function(){
-		$('#history_content').toggleClass('active');
-		if($('#history_content').hasClass('active')){
-			$('#history').empty()
-			$('#history').append(`<i class="fas fa-times-circle fa-2x"></i>`);
-		} else {
-			$('#history').empty()
-			$('#history').append(`<i class="fas fa-history fa-2x"></i>`);
-			
-		}
-	})
+	$('.warning .btnblue').on("click",function(){
+		TweenMax.to($('.warning'),1,{opacity: "0", display : "none"});
+	});
 }
 
 app.init = () => {
 	app.dataBase();
+	TweenMax.to($('.foodbtn'), 2, {opacity:1, ease:Back.easeOut});
 }
+
 $(function() {
 	app.init();
 	app.eventFire();
