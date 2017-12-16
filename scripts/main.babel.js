@@ -7,10 +7,19 @@ app.selectedPlace = {};
 app.selectedImage = {};
 app.foodType = {}
 
+//Current Bugs
+	// if any information is not defined, doesnt save to history or like.
+	// Map can not show more than 1 place at a session.
+	// if anybody put the app.html url to browser, they can bybass the Auth
+	// if there is no more place there is a small glitch on popup.
+	
 
+//Github Pages Url 
 app.baseURL = `restaurant_roulette/`;
 let map;
 
+
+//Display database info at Likes and History tabs
 app.displayDatabase = (display) => {
 	let userData;
 	if(display == 'liked'){
@@ -41,6 +50,7 @@ app.displayDatabase = (display) => {
 	});
 }
 
+//HTML Template for Display Database
 app.writeup = (img, title, website, phone) => {
 	return `<div class="container">
 			<img src="${img}">
@@ -55,6 +65,7 @@ app.writeup = (img, title, website, phone) => {
 		<div class="divider content_divider"></div>`
 }
 
+//Placing actual Restaurant info at the Main section
 app.place = (selected) => {
 	app.destination = {
 		lat: selected.lat,
@@ -83,6 +94,7 @@ app.place = (selected) => {
 	firebase.database().ref(`/users/${firebase.auth().currentUser.uid}/history`).push(app.selectedPlace);
 }
 
+//Getting image of the place with a second call to Foursquare API
 app.getImage = (selected) => {
 	$.ajax({
 		url: `https://api.foursquare.com/v2/venues/${selected.id}/photos`,
@@ -113,6 +125,7 @@ app.getImage = (selected) => {
 	})
 }
 
+//Random pick from the filtered Array of the options
 app.pickRandom = (array) => {
 	let randomNum = Math.floor(Math.random() * app.filtered.length)
 	if(app.filtered.length > 0){
@@ -123,18 +136,21 @@ app.pickRandom = (array) => {
 	}
 }
 
+//Filterin the options with rating higher than 8.5
 app.filterResult = (data) => {
 	app.filtered = data.filter((data) => {
 		return data.venue.rating > 8.5;
 	})
 }
 
+//Deleting items from the Array for now displaying the same place
 app.mapArray = (ndelete) => {
 	console.log(ndelete);
 	const index = app.filtered.indexOf(ndelete);
 	const newArray = app.filtered.splice(index,1);
 }
 
+//first Call for the locations' information
 app.fourSquare = (loca, what) => {
 	app.clientId = "VH42GH0DFNZLHDRYB4JULCZIPHD3DA4DUCKVPVBMJQIX350R";
 	app.clientSecret = "DLDPDU4LK3ZAGTLHFQLC2JEDGNR01X1MCRRS1NF3VQPV22VL";
@@ -162,6 +178,7 @@ app.fourSquare = (loca, what) => {
 	})
 }
 
+//getting Directions with current location and the restaurant
 app.googleMaps = (loca, desti) => {
 	app.googleKey = "AIzaSyB6UumqnkB2X99K9Eeef_RzAQSENqA3I0k";
 	var markerArray = [];
@@ -245,6 +262,7 @@ app.googleMaps = (loca, desti) => {
 	}
 }
 
+//getting Current Location
 app.location = () => {
 	return new Promise((resolve, reject) => {
 		navigator.geolocation.getCurrentPosition((position) =>{
@@ -257,6 +275,7 @@ app.location = () => {
 	})
 }
 
+//Initing Database
 app.dataBase = () => {
 
 	const config = {
@@ -280,6 +299,7 @@ app.dataBase = () => {
 	});	
 }
 
+//Login and Auth
 app.Log = (type) => {
 	if ( type == "facebook"){
 		var provider = new firebase.auth.FacebookAuthProvider();
@@ -317,6 +337,7 @@ app.Log = (type) => {
 	});
 }
 
+//Events
 app.eventFire = () => {
 	const $s3back = $('#section3 .btnblue');
 	const $s2direction = $('#direction');
@@ -444,6 +465,7 @@ app.eventFire = () => {
 	});
 }
 
+//Init
 app.init = () => {
 	app.dataBase();
 	TweenMax.to($('.foodbtn'), 2, {opacity:1, ease:Back.easeOut});
