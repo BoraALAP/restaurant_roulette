@@ -388,9 +388,9 @@ app.eventFire = () => {
 	})
 
 	$shlog.on("click",function(){
-		if (window.location.pathname != `/` ){
+		if (window.location.pathname != `/${app.baseURL}` ){
 			firebase.auth().signOut().then(function() {
-				window.location = `/`;
+				window.location = `/${app.baseURL}`;
 			}).catch(function(error) {
 				console.log(error); 
 			});
