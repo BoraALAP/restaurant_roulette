@@ -308,11 +308,11 @@ app.Log = (type) => {
 				var credential = error.credential;
 				// ...
 			});
-		} else if ( user && window.location.pathname == `${app.baseURL}`){
-			window.location = `${app.baseURL}app.html`;
+		} else if ( user  && window.location.pathname == `/`){
+			window.location = `/${app.baseURL}app.html`;
 
-		} else if ( !user && window.location.pathname == `${app.baseURL}app.html`){
-			window.location = `${app.baseURL}`;
+		} else if ( !user && window.location.pathname == `/${app.baseURL}app.html`){
+			window.location = `/`;
 		}	
 	});
 }
